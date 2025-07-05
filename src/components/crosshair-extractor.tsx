@@ -204,7 +204,7 @@ export function CrosshairExtractor() {
             </div>
             <p className="mt-5 text-sm text-gray-400 flex items-center">
               <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-              Copy the code and paste it into your CS2 game console: `cl_crosshair_code "CODE_HERE"`
+              Copy the code and paste it into the CS2 crosshair settings menu &quot;&quot;`
             </p>
           </div>
         )}
