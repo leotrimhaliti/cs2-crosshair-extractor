@@ -64,8 +64,14 @@ export function CrosshairExtractor() {
 
       const data: PlayerCrosshair[] = await response.json()
       setResults(data)
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.")
+    } catch (err: unknown) {
+      // Changed 'any' to 'unknown'
+      let errorMessage = "An unexpected error occurred."
+      if (err instanceof Error) {
+        // Safely check if it's an Error object
+        errorMessage = err.message
+      }
+      setError(errorMessage)
       console.error("Extraction error:", err)
     } finally {
       setLoading(false)
@@ -198,7 +204,7 @@ export function CrosshairExtractor() {
             </div>
             <p className="mt-5 text-sm text-gray-400 flex items-center">
               <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-              Copy the code and paste it into the CS2 crosshair settings menu.
+              Copy the code and paste it into your CS2 game console: `cl_crosshair_code "CODE_HERE"`
             </p>
           </div>
         )}
