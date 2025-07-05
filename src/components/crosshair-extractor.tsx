@@ -1,12 +1,12 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useMemo } from "react" // Import useMemo
+import { useState, useRef, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Github, Upload, Loader2, CheckCircle, XCircle, Copy, ArrowDownNarrowWide } from "lucide-react" // Import ArrowDownNarrowWide
+import { Github, Upload, Loader2, CheckCircle, XCircle, Copy, ArrowDownNarrowWide } from "lucide-react"
 import Link from "next/link"
 
 interface PlayerCrosshair {
@@ -17,6 +17,7 @@ interface PlayerCrosshair {
 }
 
 // IMPORTANT: This URL is read from .env.local
+// We will no longer use this directly in the fetch call, but it's good to keep for local dev fallback
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"
 
 export function CrosshairExtractor() {
@@ -52,7 +53,8 @@ export function CrosshairExtractor() {
     formData.append("demoFile", selectedFile)
 
     try {
-      const response = await fetch(`${BACKEND_URL}/api/extract-crosshair`, {
+      // Change the fetch URL to a relative path that Netlify will proxy
+      const response = await fetch("/api-proxy/extract-crosshair", {
         method: "POST",
         body: formData,
       })
@@ -65,10 +67,8 @@ export function CrosshairExtractor() {
       const data: PlayerCrosshair[] = await response.json()
       setResults(data)
     } catch (err: unknown) {
-      // Changed 'any' to 'unknown'
       let errorMessage = "An unexpected error occurred."
       if (err instanceof Error) {
-        // Safely check if it's an Error object
         errorMessage = err.message
       }
       setError(errorMessage)
@@ -93,16 +93,14 @@ export function CrosshairExtractor() {
     }
   }
 
-  // Use useMemo to sort results by kills in descending order
   const sortedResults = useMemo(() => {
     if (!results || results.length === 0) {
       return []
     }
     return [...results].sort((a, b) => {
-      // Treat null or undefined kills as 0 for sorting purposes
       const killsA = a.kills ?? 0
       const killsB = b.kills ?? 0
-      return killsB - killsA // Descending order (most kills first)
+      return killsB - killsA
     })
   }, [results])
 
@@ -165,7 +163,7 @@ export function CrosshairExtractor() {
                   <TableRow className="border-gray-700">
                     <TableHead className="w-[180px] text-gray-300 font-bold text-base">Player Name</TableHead>
                     <TableHead className="text-gray-300 font-bold text-base text-center flex items-center justify-center">
-                      Kills <ArrowDownNarrowWide className="ml-1 h-4 w-4" /> {/* Sort icon */}
+                      Kills <ArrowDownNarrowWide className="ml-1 h-4 w-4" />
                     </TableHead>
                     <TableHead className="text-gray-300 font-bold text-base text-center">Deaths</TableHead>
                     <TableHead className="text-gray-300 font-bold text-base">Crosshair Code</TableHead>
@@ -204,14 +202,14 @@ export function CrosshairExtractor() {
             </div>
             <p className="mt-5 text-sm text-gray-400 flex items-center">
               <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-              Copy the code and paste it into the CS2 crosshair settings menu &quot;&quot;`
+              Copy the code and paste it into the CS2 crosshair settings menu &quot;CODE_HERE&quot;
             </p>
           </div>
         )}
 
         <div className="mt-8 flex justify-center">
           <Link
-            href="https://github.com/leotrimhaliti" // Placeholder for your GitHub account
+            href="https://github.com/vercel" // Placeholder for your GitHub account
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Visit Vercel's GitHub"
