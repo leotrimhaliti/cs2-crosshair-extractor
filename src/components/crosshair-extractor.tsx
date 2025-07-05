@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Github, Upload, Loader2, CheckCircle, XCircle, Copy } from "lucide-react"
 import Link from "next/link"
-import { upload } from '@vercel/blob/client'; // <--- NEW: Import 'upload' from client bundle
+import { upload } from '@vercel/blob/client'; // NEW: Import 'upload' helper from the client bundle
 
 interface PlayerCrosshair {
   name: string
@@ -45,22 +45,26 @@ export function CrosshairExtractor() {
     setResults([])
 
     try {
-      // Step 1 & 2: Use the 'upload' helper from @vercel/blob/client
-      // It handles requesting the client token from your API route
-      // and then performing the direct file upload to Vercel Blob.
+      // Log the file details before attempting upload
+      console.log("Frontend: Selected File Name:", selectedFile.name);
+      console.log("Frontend: Selected File Type:", selectedFile.type);
+
+      // Step 1 & 2: Use the 'upload' helper from @vercel/blob/client.
+      // This function internally calls your 'handleUploadUrl' (your API route)
+      // to get a client token, then performs the direct file upload to Vercel Blob.
       console.log("Frontend: Initiating direct upload via @vercel/blob/client.upload...")
 
       const newBlob = await upload(selectedFile.name, selectedFile, {
-        access: 'public', // Must match the access defined in your API route
-        handleUploadUrl: '/api/get-signed-url', // Your API route that generates the client token
-        contentType: selectedFile.type, // Pass the content type
-        // clientPayload: { userId: 'some_user_id' }, // Optional: pass additional data to your API route
+        access: 'public', // Must match the access level specified in your API route
+        handleUploadUrl: '/api/get-signed-url', // This is the API route that generates your client token
+        contentType: selectedFile.type, // Pass the file's content type to the upload helper
+        // clientPayload: { userId: 'some_user_id' }, // Optional: pass additional data if your API route needs it
       });
 
-      const demoFileUrl = newBlob.url; // The URL of the uploaded blob
+      const demoFileUrl = newBlob.url; // The public URL of the uploaded blob
       console.log("Frontend: File successfully uploaded to Vercel Blob:", demoFileUrl);
 
-      // Step 3: Call the extract-crosshair API route with the Blob URL
+      // Step 3: Call your existing extract-crosshair API route with the Blob URL
       console.log("Frontend: Sending request to /api/extract-crosshair with Blob URL.")
       const response = await fetch("/api/extract-crosshair", {
         method: "POST",
