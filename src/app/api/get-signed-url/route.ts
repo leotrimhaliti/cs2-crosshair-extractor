@@ -1,26 +1,26 @@
-import { put } from "@vercel/blob"
+import { getSignedUrl } from "@vercel/blob" // Correct import for getSignedUrl
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const { searchParams } = new URL(request.url)
-  const filename = searchParams.get("filename")
+  // We expect the filename to be in the request body as JSON, not search params
+  const { filename } = await request.json()
 
   if (!filename) {
     return NextResponse.json({ error: "Filename is required." }, { status: 400 })
   }
 
   try {
-    // Generate a signed URL for direct client-side upload.
-    // The 'put' function here is used to get a signed URL, not to perform the upload itself.
-    // We use `addRandomSuffix: false` to keep the filename clean, and `cacheControlMaxAge: 0`
-    // to ensure the URL is not cached.
-    const { url } = await put(filename, "", {
+    // Use getSignedUrl to generate a URL for direct client-side upload.
+    // This function does not take a 'body' argument for the file content.
+    const { url } = await getSignedUrl(filename, {
       access: "public", // Or 'private' if you configure it
-      addRandomSuffix: false, // We want the exact filename
-      cacheControlMaxAge: 0, // Do not cache the signed URL
+      // addRandomSuffix: false, // Removed, as getSignedUrl adds a hash by default for uniqueness
+      // cacheControlMaxAge: 0, // Removed, not directly applicable to signed URL generation
+      // The client will use this URL to PUT the file directly.
+      method: "PUT", // Specify that the signed URL is for a PUT request
     })
 
-    // Return the signed URL to the client. The client will then upload the file directly to this URL.
+    // Return the signed URL to the client.
     return NextResponse.json({ url })
   } catch (error: any) {
     console.error("Error generating signed URL for Vercel Blob:", error)
