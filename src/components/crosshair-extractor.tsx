@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Github, Upload, Loader2, CheckCircle, XCircle, Copy } from "lucide-react"
 import Link from "next/link"
+import { upload } from "@vercel/blob/client" // Import the client-side upload function
 
 interface PlayerCrosshair {
   name: string
@@ -44,19 +45,14 @@ export function CrosshairExtractor() {
     setResults([])
 
     try {
-      // Step 1: Get a signed URL and upload the file directly to Vercel Blob
-      console.log("Frontend: Initiating direct upload to Vercel Blob...")
-      const uploadResponse = await fetch(`/api/upload-demo?filename=${selectedFile.name}`, {
-        method: "POST",
-        body: selectedFile, // Send the file directly as the body
+      // Step 1: Use @vercel/blob/client's upload function for direct client-to-blob upload
+      console.log("Frontend: Initiating direct upload to Vercel Blob via client SDK...")
+      const newBlob = await upload(selectedFile.name, selectedFile, {
+        access: "public", // Or 'private' if you configure it
+        handleUploadUrl: "/api/upload-demo", // This is the API route that generates the signed URL
       })
 
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json()
-        throw new Error(errorData.error || "Failed to upload demo file to storage.")
-      }
-
-      const { url: demoFileUrl } = await uploadResponse.json()
+      const demoFileUrl = newBlob.url
       console.log("Frontend: File uploaded to Vercel Blob:", demoFileUrl)
 
       // Step 2: Call the extract-crosshair API route with the Blob URL

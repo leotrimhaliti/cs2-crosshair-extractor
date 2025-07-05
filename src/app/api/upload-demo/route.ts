@@ -1,28 +1,31 @@
-import { put } from "@vercel/blob"
+import { handleUpload, type HandleUploadBody } from "@vercel/blob/server"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const { searchParams } = new URL(request.url)
-  const filename = searchParams.get("filename")
-
-  if (!filename) {
-    return NextResponse.json({ error: "Filename is required." }, { status: 400 })
-  }
+  const body = (await request.json()) as HandleUploadBody
 
   try {
-    // The put function handles the actual upload to Vercel Blob storage.
-    // It returns a signed URL that the client can use to upload the file directly.
-    // We're using `access: 'public'` for simplicity, but you might want 'private'
-    // if you need more control over access.
-    const blob = await put(filename, request.body!, {
-      access: "public",
+    const jsonResponse = await handleUpload({
+      body,
+      request,
+      onBeforeHandle: async (pathname, clientPayload) => {
+        // You can add authentication or validation here if needed
+        // For example, check if the user is logged in
+        return {
+          // You can return a custom filename here if you want
+          // For now, we'll use the original filename from the client
+          filename: clientPayload.filename,
+        }
+      },
+      onComplete: async (blob, clientPayload) => {
+        // This callback runs after the file is successfully uploaded to Blob storage
+        console.log("Blob upload complete:", blob, "clientPayload:", clientPayload)
+      },
     })
 
-    // Return the URL of the uploaded blob. The frontend will use this URL
-    // to tell the /api/extract-crosshair route where to find the demo file.
-    return NextResponse.json(blob)
-  } catch (error: any) {
-    console.error("Error uploading to Vercel Blob:", error)
-    return NextResponse.json({ error: `Failed to upload file: ${error.message}` }, { status: 500 })
+    return NextResponse.json(jsonResponse)
+  } catch (error) {
+    console.error("Error in /api/upload-demo:", error)
+    return NextResponse.json({ error: (error as Error).message }, { status: 400 })
   }
 }
