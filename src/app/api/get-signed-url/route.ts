@@ -1,4 +1,4 @@
-import { getSignedUrl } from "@vercel/blob"
+import { getSignedUrl } from "@vercel/blob" // Correct import for getSignedUrl
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 

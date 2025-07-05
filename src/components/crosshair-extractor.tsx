@@ -1,29 +1,21 @@
 "use client"
 
-import { CardContent } from "@/components/ui/card"
-
 import type React from "react"
 import { useState, useRef } from "react"
-import { CardTitle } from "@/components/ui/card"
-import { CardHeader } from "@/components/ui/card"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { Loader2 } from "lucide-react"
-import { Upload } from "lucide-react"
-import { XCircle } from "lucide-react"
-import { CheckCircle } from "lucide-react"
-import { Copy } from "lucide-react"
-import { Github } from "lucide-react"
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card" // Corrected CardDescription import
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Github, Upload, Loader2, CheckCircle, XCircle, Copy } from "lucide-react"
+import Link from "next/link" // Corrected Link import
 
 interface PlayerCrosshair {
   name: string
   crosshair_code: string
 }
 
-const CrosshairExtractor: React.FC = () => {
+// Changed to named export to match app/page.tsx import
+export function CrosshairExtractor() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -148,9 +140,11 @@ const CrosshairExtractor: React.FC = () => {
     <Card className="w-full max-w-2xl bg-gray-900 text-white rounded-xl shadow-2xl border border-gray-800">
       <CardHeader className="flex flex-col items-center text-center p-8 pb-4">
         <CardTitle className="text-4xl font-extrabold tracking-tight mb-2">CS2 Crosshair Extractor</CardTitle>
-        <Card.Description className="text-gray-400 text-lg max-w-md">
+        <CardDescription className="text-gray-400 text-lg max-w-md">
+          {" "}
+          {/* Corrected to CardDescription */}
           Effortlessly extract crosshair configurations from your CS2 demo files.
-        </Card.Description>
+        </CardDescription>
       </CardHeader>
       <CardContent className="p-8 pt-0">
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -254,5 +248,3 @@ const CrosshairExtractor: React.FC = () => {
     </Card>
   )
 }
-
-export default CrosshairExtractor

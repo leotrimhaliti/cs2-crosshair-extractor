@@ -1,4 +1,4 @@
-import { CrosshairExtractor } from "@/components/crosshair-extractor"
+import { CrosshairExtractor } from "@/components/crosshair-extractor" // Ensure named import
 
 export default function HomePage() {
   return (

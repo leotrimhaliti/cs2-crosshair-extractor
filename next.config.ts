@@ -1,9 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // serverComponentsExternalPackages is for Server Components, API routes are different
-  // We need to ensure demoparser2 is bundled correctly for the API route.
-  // The webpack config below handles native modules for server-side code (including API routes).
-  serverComponentsExternalPackages: [], // Remove demoparser2 from here if it was present
+  // REMOVED: serverComponentsExternalPackages is no longer a recognized option in Next.js 15+
 
   webpack: (config, { isServer }) => {
     if (isServer) {
