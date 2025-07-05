@@ -16,9 +16,9 @@ interface PlayerCrosshair {
   deaths?: number | null
 }
 
-// IMPORTANT: This URL is read from .env.local
-// We will no longer use this directly in the fetch call, but it's good to keep for local dev fallback
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"
+// Removed the BACKEND_URL constant as it's no longer directly used in fetch due to Netlify proxy.
+// If you need it for local development, you can re-add it and conditionally use it,
+// or configure your local dev server to also proxy requests.
 
 export function CrosshairExtractor() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -53,7 +53,7 @@ export function CrosshairExtractor() {
     formData.append("demoFile", selectedFile)
 
     try {
-      // Change the fetch URL to a relative path that Netlify will proxy
+      // Fetch call now uses the relative path that Netlify will proxy
       const response = await fetch("/api-proxy/extract-crosshair", {
         method: "POST",
         body: formData,
