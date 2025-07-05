@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Github, Upload, Loader2, CheckCircle, XCircle, Copy } from "lucide-react"
 import Link from "next/link"
-import { upload } from "@vercel/blob/client" // Import the client-side upload function
+// No longer need upload from @vercel/blob/client as we're doing a direct fetch PUT
+// import { upload } from "@vercel/blob/client"
 
 interface PlayerCrosshair {
   name: string
@@ -45,24 +46,51 @@ export function CrosshairExtractor() {
     setResults([])
 
     try {
-      // Step 1: Use @vercel/blob/client's upload function for direct client-to-blob upload
-      console.log("Frontend: Initiating direct upload to Vercel Blob via client SDK...")
-      const newBlob = await upload(selectedFile.name, selectedFile, {
-        access: "public", // Or 'private' if you configure it
-        handleUploadUrl: "/api/upload-demo", // This is the API route that generates the signed URL
+      // Step 1: Request a signed URL from our API route
+      console.log("Frontend: Requesting signed URL for direct upload...")
+      const signedUrlResponse = await fetch(`/api/get-signed-url?filename=${selectedFile.name}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json", // This route expects JSON for filename
+        },
+        body: JSON.stringify({ filename: selectedFile.name }), // Send filename in body
       })
 
-      const demoFileUrl = newBlob.url
-      console.log("Frontend: File uploaded to Vercel Blob:", demoFileUrl)
+      if (!signedUrlResponse.ok) {
+        const errorData = await signedUrlResponse.json()
+        throw new Error(errorData.error || "Failed to get signed URL for upload.")
+      }
 
-      // Step 2: Call the extract-crosshair API route with the Blob URL
+      const { url: signedUrl } = await signedUrlResponse.json()
+      console.log("Frontend: Received signed URL:", signedUrl)
+
+      // Step 2: Upload the file directly to Vercel Blob using the signed URL
+      console.log("Frontend: Uploading file directly to Vercel Blob via signed URL...")
+      const directUploadResponse = await fetch(signedUrl, {
+        method: "PUT", // Use PUT method for direct upload
+        headers: {
+          "Content-Type": selectedFile.type, // Set content type of the file
+        },
+        body: selectedFile, // Send the file directly as the body
+      })
+
+      if (!directUploadResponse.ok) {
+        // Vercel Blob direct upload errors might not be JSON
+        const errorText = await directUploadResponse.text()
+        throw new Error(`Failed direct upload to Blob: ${directUploadResponse.status} - ${errorText}`)
+      }
+
+      const demoFileUrl = directUploadResponse.url // The URL of the uploaded blob
+      console.log("Frontend: File successfully uploaded to Vercel Blob:", demoFileUrl)
+
+      // Step 3: Call the extract-crosshair API route with the Blob URL
       console.log("Frontend: Sending request to /api/extract-crosshair with Blob URL.")
       const response = await fetch("/api/extract-crosshair", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json", // Important: sending JSON now
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ demoFileUrl }), // Send the URL in the body
+        body: JSON.stringify({ demoFileUrl }),
       })
       console.log("Frontend: Received response object from extract-crosshair:", response)
 
