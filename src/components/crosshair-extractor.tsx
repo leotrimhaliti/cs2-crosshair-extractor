@@ -1,23 +1,18 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useMemo } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Github, Upload, Loader2, CheckCircle, XCircle, Copy, ArrowDownNarrowWide } from "lucide-react"
+import { Github, Upload, Loader2, CheckCircle, XCircle, Copy } from "lucide-react"
 import Link from "next/link"
 
 interface PlayerCrosshair {
   name: string
   crosshair_code: string
-  kills?: number | null
-  deaths?: number | null
 }
-
-// IMPORTANT: No need for NEXT_PUBLIC_BACKEND_URL anymore, as the API is local
-// const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"
 
 export function CrosshairExtractor() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -52,41 +47,36 @@ export function CrosshairExtractor() {
     formData.append("demoFile", selectedFile)
 
     try {
-      console.log("Frontend: Sending request to /api/extract-crosshair") // Frontend Log 1
-      // Fetch directly from the API route within the same Next.js project
+      // console.log("Frontend: Sending request to /api/extract-crosshair") // Remove this log
       const response = await fetch("/api/extract-crosshair", {
         method: "POST",
         body: formData,
       })
-      console.log("Frontend: Received response object:", response) // Frontend Log 2
+      // console.log("Frontend: Received response object:", response) // Remove this log
 
       if (!response.ok) {
-        console.error("Frontend: Response not OK. Status:", response.status) // Frontend Log 3
+        // console.error("Frontend: Response not OK. Status:", response.status) // Remove this log
         let errorMessage = "Failed to extract crosshair codes."
         try {
-          // Read the response body as text first
           const errorText = await response.text()
-          console.error("Frontend: Raw error response text:", errorText) // Frontend Log 4
+          // console.error("Frontend: Raw error response text:", errorText) // Remove this log
           try {
-            // Attempt to parse the text as JSON
             const errorJson = JSON.parse(errorText)
             errorMessage = errorJson.error || errorMessage
           } catch (jsonParseError) {
-            // If JSON parsing fails, use the raw text as the error message
-            console.error("Frontend: Failed to parse error response as JSON, using raw text.", jsonParseError) // Frontend Log 5
+            // console.error("Frontend: Failed to parse error response as JSON, using raw text.", jsonParseError) // Remove this log
             errorMessage = errorText || errorMessage
           }
         } catch (readError) {
-          console.error("Frontend: Failed to read response body as text.", readError) // Frontend Log 6
-          // If reading as text also fails, use a generic error
+          // console.error("Frontend: Failed to read response body as text.", readError) // Remove this log
           errorMessage = "An unknown error occurred and response body could not be read."
         }
         throw new Error(errorMessage)
       }
 
-      console.log("Frontend: Response is OK. Attempting to parse JSON.") // Frontend Log 6
+      // console.log("Frontend: Response is OK. Attempting to parse JSON.") // Remove this log
       const data: PlayerCrosshair[] = await response.json()
-      console.log("Frontend: Successfully parsed JSON data:", data) // Frontend Log 7
+      // console.log("Frontend: Successfully parsed JSON data:", data) // Remove this log
       setResults(data)
     } catch (err: unknown) {
       let errorMessage = "An unexpected error occurred."
@@ -94,14 +84,14 @@ export function CrosshairExtractor() {
         errorMessage = err.message
       }
       setError(errorMessage)
-      console.error("Frontend: Extraction error caught:", err) // Frontend Log 8
+      console.error("Frontend: Extraction error caught:", err)
     } finally {
       setLoading(false)
       if (fileInputRef.current) {
         fileInputRef.current.value = ""
       }
       setSelectedFile(null)
-      console.log("Frontend: Finally block executed.") // Frontend Log 9
+      // console.log("Frontend: Finally block executed.") // Remove this log
     }
   }
 
@@ -115,17 +105,6 @@ export function CrosshairExtractor() {
       setError("Failed to copy crosshair code.")
     }
   }
-
-  const sortedResults = useMemo(() => {
-    if (!results || results.length === 0) {
-      return []
-    }
-    return [...results].sort((a, b) => {
-      const killsA = a.kills ?? 0
-      const killsB = b.kills ?? 0
-      return killsB - killsA
-    })
-  }, [results])
 
   return (
     <Card className="w-full max-w-2xl bg-gray-900 text-white rounded-xl shadow-2xl border border-gray-800">
@@ -185,23 +164,13 @@ export function CrosshairExtractor() {
                 <TableHeader className="bg-gray-800">
                   <TableRow className="border-gray-700">
                     <TableHead className="w-[180px] text-gray-300 font-bold text-base">Player Name</TableHead>
-                    <TableHead className="text-gray-300 font-bold text-base text-center flex items-center justify-center">
-                      Kills <ArrowDownNarrowWide className="ml-1 h-4 w-4" />
-                    </TableHead>
-                    <TableHead className="text-gray-300 font-bold text-base text-center">Deaths</TableHead>
                     <TableHead className="text-gray-300 font-bold text-base">Crosshair Code</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedResults.map((player, index) => (
+                  {results.map((player, index) => (
                     <TableRow key={index} className="border-gray-800 hover:bg-gray-800/50 transition-colors">
                       <TableCell className="font-medium text-gray-100 py-3">{player.name}</TableCell>
-                      <TableCell className="text-gray-300 py-3 text-center">
-                        {player.kills !== null ? player.kills : "-"}
-                      </TableCell>
-                      <TableCell className="text-gray-300 py-3 text-center">
-                        {player.deaths !== null ? player.deaths : "-"}
-                      </TableCell>
                       <TableCell className="font-mono text-sm text-gray-300 break-all py-3 flex items-center justify-between">
                         <span>{player.crosshair_code}</span>
                         <Button

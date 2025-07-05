@@ -14,21 +14,22 @@ export async function POST(request: NextRequest) {
     const demoFile = formData.get("demoFile") as File | null
 
     if (!demoFile) {
-      console.log("API Route: No demo file provided.")
+      // console.log("API Route: No demo file provided.") // Remove this log
       return NextResponse.json({ error: "No demo file provided." }, { status: 400 })
     }
 
     // Dynamically require demoparser2
     // This is necessary because demoparser2 is a native Node.js module
-    console.log("API Route: Attempting to require @laihoe/demoparser2")
+    // console.log("API Route: Attempting to require @laihoe/demoparser2") // Remove this log
     const demoparser = require("@laihoe/demoparser2")
-    console.log("API Route: @laihoe/demoparser2 successfully required.")
+    // console.log("API Route: @laihoe/demoparser2 successfully required.") // Remove this log
 
-    console.log("--- demoparser2 module loaded in API Route ---")
-    console.log("demoparser object:", demoparser)
-    console.log("Type of demoparser.parseEvent:", typeof demoparser.parseEvent)
-    console.log("Type of demoparser.parseTicks:", typeof demoparser.parseTicks)
-    console.log("---------------------------------")
+    // Remove these verbose demoparser object logs
+    // console.log("--- demoparser2 module loaded in API Route ---")
+    // console.log("demoparser object:", demoparser)
+    // console.log("Type of demoparser.parseEvent:", typeof demoparser.parseEvent)
+    // console.log("Type of demoparser.parseTicks:", typeof demoparser.parseTicks)
+    // console.log("---------------------------------")
 
     if (typeof demoparser.parseEvent !== "function" || typeof demoparser.parseTicks !== "function") {
       console.error("API Route: demoparser2 functions not found.")
@@ -44,19 +45,19 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(arrayBuffer)
 
     await fs.writeFile(tempFilePath, buffer)
-    console.log(`API Route: Temporary file written to: ${tempFilePath}`)
+    // console.log(`API Route: Temporary file written to: ${tempFilePath}`) // Remove this log
 
     let gameEndTick = -1
     let playersDataAtEndTick = []
-    const playerFields = ["crosshair_code", "name", "kills_total", "deaths_total"]
+    const playerFields = ["crosshair_code", "name"]
 
-    console.log("API Route: Attempting to parse round_end events.")
+    // console.log("API Route: Attempting to parse round_end events.") // Remove this log
     try {
       const roundEnds = demoparser.parseEvent(tempFilePath, "round_end")
-      console.log("API Route: Parsed round_end events. Count:", roundEnds.length)
+      // console.log("API Route: Parsed round_end events. Count:", roundEnds.length) // Remove this log
       if (roundEnds && roundEnds.length > 0) {
         gameEndTick = Math.max(...roundEnds.map((x) => x.tick))
-        console.log("API Route: Determined gameEndTick from round_end:", gameEndTick)
+        // console.log("API Route: Determined gameEndTick from round_end:", gameEndTick) // Remove this log
       } else {
         console.warn("API Route: No 'round_end' events found.")
       }
@@ -66,13 +67,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (gameEndTick === -1 || gameEndTick === 0) {
-      console.log("API Route: Attempting to parse all ticks for fallback end tick.")
+      // console.log("API Route: Attempting to parse all ticks for fallback end tick.") // Remove this log
       try {
         const allTicks = demoparser.parseTicks(tempFilePath, playerFields)
-        console.log("API Route: Parsed all ticks. Total ticks:", allTicks.length)
+        // console.log("API Route: Parsed all ticks. Total ticks:", allTicks.length) // Remove this log
         if (allTicks.length > 0) {
           gameEndTick = allTicks[allTicks.length - 1].tick
-          console.log("API Route: Using last tick as gameEndTick:", gameEndTick)
+          // console.log("API Route: Using last tick as gameEndTick:", gameEndTick) // Remove this log
         } else {
           console.warn("API Route: No ticks found in the demo file at all.")
         }
@@ -83,10 +84,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (gameEndTick > 0) {
-      console.log(`API Route: Attempting to parse players data at tick ${gameEndTick}.`)
+      // console.log(`API Route: Attempting to parse players data at tick ${gameEndTick}.`) // Remove this log
       try {
         playersDataAtEndTick = demoparser.parseTicks(tempFilePath, playerFields, [gameEndTick])
-        console.log("API Route: Parsed players data at end tick.")
+        // console.log("API Route: Parsed players data at end tick.") // Remove this log
       } catch (e) {
         console.error(`API Route: Error parsing players data at tick ${gameEndTick}:`, e)
         throw new Error(`Failed to extract player data at the determined end tick.`)
@@ -95,8 +96,7 @@ export async function POST(request: NextRequest) {
       console.warn("API Route: No valid gameEndTick determined, cannot parse player data at a specific tick.")
     }
 
-    const extractedCrosshairs: { name: string; crosshair_code: string; kills: number | null; deaths: number | null }[] =
-      []
+    const extractedCrosshairs: { name: string; crosshair_code: string }[] = [] // Updated type
     if (playersDataAtEndTick && playersDataAtEndTick.length > 0) {
       // demoparser2 returns an array of tick data, we need the last one for final player states
       const lastTickData = playersDataAtEndTick[playersDataAtEndTick.length - 1]
@@ -107,19 +107,17 @@ export async function POST(request: NextRequest) {
             extractedCrosshairs.push({
               name: player.name || `Player ${steamId}`,
               crosshair_code: player.crosshair_code,
-              kills: player.kills_total !== undefined ? player.kills_total : null,
-              deaths: player.deaths_total !== undefined ? player.deaths_total : null,
             })
           }
         }
       }
-      console.log("API Route: Successfully extracted crosshairs. Count:", extractedCrosshairs.length)
+      // console.log("API Route: Successfully extracted crosshairs. Count:", extractedCrosshairs.length) // Remove this log
     } else {
       console.warn("API Route: No player data found at the end tick after parsing.")
     }
 
     if (extractedCrosshairs.length === 0) {
-      console.log("API Route: No crosshair codes found in the demo.")
+      // console.log("API Route: No crosshair codes found in the demo.") // Remove this log
       return NextResponse.json(
         { error: "No crosshair codes found in the demo. Ensure it's a valid CS2 demo and contains player data." },
         { status: 404 },
@@ -134,7 +132,7 @@ export async function POST(request: NextRequest) {
     if (tempFilePath) {
       try {
         await fs.unlink(tempFilePath)
-        console.log(`API Route: Temporary file deleted: ${tempFilePath}`)
+        // console.log(`API Route: Temporary file deleted: ${tempFilePath}`) // Remove this log
       } catch (unlinkError) {
         console.error(`API Route: Error deleting temporary file ${tempFilePath}:`, unlinkError)
       }
