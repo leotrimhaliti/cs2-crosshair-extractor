@@ -211,7 +211,7 @@ export function CrosshairExtractor() {
 
         <div className="mt-8 flex justify-center">
           <Link
-            href="https://github.com/vercel" // Placeholder for your GitHub account
+            href="https://github.com/leotrimhaliti" // Placeholder for your GitHub account
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Visit Vercel's GitHub"
