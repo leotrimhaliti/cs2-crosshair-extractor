@@ -1,12 +1,13 @@
-import { getSignedUrl } from "@vercel/blob" // Correct import for getSignedUrl
+import { getSignedUrl } from "@vercel/blob"
 import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server" // Import NextRequest
 
-export async function POST(request: Request): Promise<NextResponse> {
-  // We expect the filename to be in the request body as JSON, not search params
-  const { filename } = await request.json()
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Read filename from query parameters, NOT from request body
+  const filename = request.nextUrl.searchParams.get("filename")
 
   if (!filename) {
-    return NextResponse.json({ error: "Filename is required." }, { status: 400 })
+    return NextResponse.json({ error: "Filename is required in query parameters." }, { status: 400 })
   }
 
   try {
@@ -14,9 +15,6 @@ export async function POST(request: Request): Promise<NextResponse> {
     // This function does not take a 'body' argument for the file content.
     const { url } = await getSignedUrl(filename, {
       access: "public", // Or 'private' if you configure it
-      // addRandomSuffix: false, // Removed, as getSignedUrl adds a hash by default for uniqueness
-      // cacheControlMaxAge: 0, // Removed, not directly applicable to signed URL generation
-      // The client will use this URL to PUT the file directly.
       method: "PUT", // Specify that the signed URL is for a PUT request
     })
 
