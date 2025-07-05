@@ -43,40 +43,51 @@ export function CrosshairExtractor() {
     setError(null)
     setResults([])
 
-    const formData = new FormData()
-    formData.append("demoFile", selectedFile)
-
     try {
-      // console.log("Frontend: Sending request to /api/extract-crosshair") // Remove this log
+      // Step 1: Get a signed URL and upload the file directly to Vercel Blob
+      console.log("Frontend: Initiating direct upload to Vercel Blob...")
+      const uploadResponse = await fetch(`/api/upload-demo?filename=${selectedFile.name}`, {
+        method: "POST",
+        body: selectedFile, // Send the file directly as the body
+      })
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json()
+        throw new Error(errorData.error || "Failed to upload demo file to storage.")
+      }
+
+      const { url: demoFileUrl } = await uploadResponse.json()
+      console.log("Frontend: File uploaded to Vercel Blob:", demoFileUrl)
+
+      // Step 2: Call the extract-crosshair API route with the Blob URL
+      console.log("Frontend: Sending request to /api/extract-crosshair with Blob URL.")
       const response = await fetch("/api/extract-crosshair", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json", // Important: sending JSON now
+        },
+        body: JSON.stringify({ demoFileUrl }), // Send the URL in the body
       })
-      // console.log("Frontend: Received response object:", response) // Remove this log
+      console.log("Frontend: Received response object from extract-crosshair:", response)
 
       if (!response.ok) {
-        // console.error("Frontend: Response not OK. Status:", response.status) // Remove this log
         let errorMessage = "Failed to extract crosshair codes."
         try {
           const errorText = await response.text()
-          // console.error("Frontend: Raw error response text:", errorText) // Remove this log
           try {
             const errorJson = JSON.parse(errorText)
             errorMessage = errorJson.error || errorMessage
           } catch (jsonParseError) {
-            // console.error("Frontend: Failed to parse error response as JSON, using raw text.", jsonParseError) // Remove this log
             errorMessage = errorText || errorMessage
           }
         } catch (readError) {
-          // console.error("Frontend: Failed to read response body as text.", readError) // Remove this log
           errorMessage = "An unknown error occurred and response body could not be read."
         }
         throw new Error(errorMessage)
       }
 
-      // console.log("Frontend: Response is OK. Attempting to parse JSON.") // Remove this log
       const data: PlayerCrosshair[] = await response.json()
-      // console.log("Frontend: Successfully parsed JSON data:", data) // Remove this log
+      console.log("Frontend: Successfully parsed JSON data:", data)
       setResults(data)
     } catch (err: unknown) {
       let errorMessage = "An unexpected error occurred."
@@ -91,7 +102,6 @@ export function CrosshairExtractor() {
         fileInputRef.current.value = ""
       }
       setSelectedFile(null)
-      // console.log("Frontend: Finally block executed.") // Remove this log
     }
   }
 
