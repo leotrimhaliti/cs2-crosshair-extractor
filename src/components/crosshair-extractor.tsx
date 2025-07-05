@@ -3,18 +3,18 @@
 import type React from "react"
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card" // Corrected CardDescription import
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Github, Upload, Loader2, CheckCircle, XCircle, Copy } from "lucide-react"
-import Link from "next/link" // Corrected Link import
+import Link from "next/link"
+import { upload } from '@vercel/blob/client'; // <--- NEW: Import 'upload' from client bundle
 
 interface PlayerCrosshair {
   name: string
   crosshair_code: string
 }
 
-// Changed to named export to match app/page.tsx import
 export function CrosshairExtractor() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
@@ -45,39 +45,20 @@ export function CrosshairExtractor() {
     setResults([])
 
     try {
-      // Step 1: Request a signed URL from our API route using GET method and query params
-      console.log("Frontend: Requesting signed URL for direct upload...")
-      const signedUrlResponse = await fetch(`/api/get-signed-url?filename=${selectedFile.name}`, {
-        method: "GET", // Changed to GET
-        // No 'Content-Type' header and no 'body' for this request
-      })
+      // Step 1 & 2: Use the 'upload' helper from @vercel/blob/client
+      // It handles requesting the client token from your API route
+      // and then performing the direct file upload to Vercel Blob.
+      console.log("Frontend: Initiating direct upload via @vercel/blob/client.upload...")
 
-      if (!signedUrlResponse.ok) {
-        const errorData = await signedUrlResponse.json()
-        throw new Error(errorData.error || "Failed to get signed URL for upload.")
-      }
+      const newBlob = await upload(selectedFile.name, selectedFile, {
+        access: 'public', // Must match the access defined in your API route
+        handleUploadUrl: '/api/get-signed-url', // Your API route that generates the client token
+        contentType: selectedFile.type, // Pass the content type
+        // clientPayload: { userId: 'some_user_id' }, // Optional: pass additional data to your API route
+      });
 
-      const { url: signedUrl } = await signedUrlResponse.json()
-      console.log("Frontend: Received signed URL:", signedUrl)
-
-      // Step 2: Upload the file directly to Vercel Blob using the signed URL
-      console.log("Frontend: Uploading file directly to Vercel Blob via signed URL...")
-      const directUploadResponse = await fetch(signedUrl, {
-        method: "PUT", // Use PUT method for direct upload
-        headers: {
-          "Content-Type": selectedFile.type, // Set content type of the file
-        },
-        body: selectedFile, // Send the file directly as the body
-      })
-
-      if (!directUploadResponse.ok) {
-        // Vercel Blob direct upload errors might not be JSON
-        const errorText = await directUploadResponse.text()
-        throw new Error(`Failed direct upload to Blob: ${directUploadResponse.status} - ${errorText}`)
-      }
-
-      const demoFileUrl = directUploadResponse.url // The URL of the uploaded blob
-      console.log("Frontend: File successfully uploaded to Vercel Blob:", demoFileUrl)
+      const demoFileUrl = newBlob.url; // The URL of the uploaded blob
+      console.log("Frontend: File successfully uploaded to Vercel Blob:", demoFileUrl);
 
       // Step 3: Call the extract-crosshair API route with the Blob URL
       console.log("Frontend: Sending request to /api/extract-crosshair with Blob URL.")
@@ -141,8 +122,6 @@ export function CrosshairExtractor() {
       <CardHeader className="flex flex-col items-center text-center p-8 pb-4">
         <CardTitle className="text-4xl font-extrabold tracking-tight mb-2">CS2 Crosshair Extractor</CardTitle>
         <CardDescription className="text-gray-400 text-lg max-w-md">
-          {" "}
-          {/* Corrected to CardDescription */}
           Effortlessly extract crosshair configurations from your CS2 demo files.
         </CardDescription>
       </CardHeader>
@@ -233,7 +212,7 @@ export function CrosshairExtractor() {
 
         <div className="mt-8 flex justify-center">
           <Link
-            href="https://github.com/vercel" // Placeholder for your GitHub account
+            href="https://github.com/vercel"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Visit Vercel's GitHub"

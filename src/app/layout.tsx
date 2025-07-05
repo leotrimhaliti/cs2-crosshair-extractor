@@ -1,15 +1,16 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Roboto_Mono } from "next/font/google"; // <--- CHANGED: Import standard Google Fonts
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({ // <--- CHANGED: Use Inter for sans-serif
   subsets: ["latin"],
+  variable: "--font-inter-sans", // You might want to update your CSS variables if you use these
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const robotoMono = Roboto_Mono({ // <--- CHANGED: Use Roboto Mono for monospace
   subsets: ["latin"],
+  variable: "--font-roboto-mono", // You might want to update your CSS variables if you use these
 });
 
 export const metadata: Metadata = {
@@ -25,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${robotoMono.variable} antialiased`} // <--- CHANGED: Apply new font variables
       >
         {children}
       </body>
