@@ -56,13 +56,12 @@ const CrosshairExtractor: React.FC = () => {
       // Step 1: Request a signed URL from our API route
       console.log("Frontend: Requesting signed URL for direct upload...")
       // Send filename in query parameters, and explicitly no body for this request
-const signedUrlResponse = await fetch(`/api/get-signed-url`, {
+const signedUrlResponse = await fetch(`/get-signed-url`, {
   method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({ filename: selectedFile.name })
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ filename: selectedFile.name }),
 })
+
       if (!signedUrlResponse.ok) {
         const errorData = await signedUrlResponse.json()
         throw new Error(errorData.error || "Failed to get signed URL for upload.")

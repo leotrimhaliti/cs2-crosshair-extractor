@@ -2,17 +2,19 @@ import { getSignedUrl } from "@vercel/blob"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const { filename } = await request.json()
-
-  if (!filename) {
-    return NextResponse.json({ error: "Filename is required." }, { status: 400 })
-  }
-
   try {
+    const { filename } = await request.json()
+
+    if (!filename) {
+      return NextResponse.json({ error: "Filename is required." }, { status: 400 })
+    }
+
+    // Add `body` property as empty string to fix "body is required" error
     const { url } = await getSignedUrl({
       filename,
       access: "public",
       method: "PUT",
+      body: "", // Required for signature calculation
     })
 
     return NextResponse.json({ url })
