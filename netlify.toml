@@ -1,0 +1,6 @@
+[[redirects]]
+  from = "/api-proxy/*"
+  to = "https://crosshair-backend.onrender.com/api/:splat"
+  status = 200
+  force = true
+  headers = {X-From = "Netlify"} # Optional: Add a header to identify proxied requests
