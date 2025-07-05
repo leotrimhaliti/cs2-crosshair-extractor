@@ -9,7 +9,7 @@ import { CardHeader } from "@/components/ui/card"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import Link from "next/link" // Corrected import for Link
+import Link from "next/link"
 import { Loader2 } from "lucide-react"
 import { Upload } from "lucide-react"
 import { XCircle } from "lucide-react"
@@ -53,14 +53,12 @@ const CrosshairExtractor: React.FC = () => {
     setResults([])
 
     try {
-      // Step 1: Request a signed URL from our API route
+      // Step 1: Request a signed URL from our API route using GET method and query params
       console.log("Frontend: Requesting signed URL for direct upload...")
-      // Send filename in query parameters, and explicitly no body for this request
-const signedUrlResponse = await fetch(`/get-signed-url`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ filename: selectedFile.name }),
-})
+      const signedUrlResponse = await fetch(`/api/get-signed-url?filename=${selectedFile.name}`, {
+        method: "GET", // Changed to GET
+        // No 'Content-Type' header and no 'body' for this request
+      })
 
       if (!signedUrlResponse.ok) {
         const errorData = await signedUrlResponse.json()
