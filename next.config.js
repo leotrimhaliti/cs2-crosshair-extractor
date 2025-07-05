@@ -1,12 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // REMOVED: serverComponentsExternalPackages is no longer a recognized option in Next.js 15+
+  // If you were using serverComponentsExternalPackages before for @laihoe/demoparser2,
+  // it is a valid option in Next.js 14.x. However, the webpack rule below
+  // generally handles native modules correctly by making them external.
+  // If you still encounter issues related to demoparser2 after fixing this config,
+  // you might consider uncommenting and using this as well:
+  // serverComponentsExternalPackages: ['@laihoe/demoparser2'],
 
   webpack: (config, { isServer }) => {
     if (isServer) {
       // Ensure demoparser2 is treated as an external commonjs module for server-side bundling
       // This prevents webpack from trying to bundle the native .node file directly
       const originalExternals = config.externals;
+
+      // Ensure originalExternals is always an array
+      const externalsArray = Array.isArray(originalExternals)
+        ? originalExternals
+        : typeof originalExternals === 'function'
+          ? [originalExternals]
+          : []; // Handle null/undefined or other types
 
       config.externals = [
         ({ request }, callback) => {
@@ -15,7 +27,7 @@ const nextConfig = {
           }
           callback();
         },
-        ...(Array.isArray(originalExternals) ? originalExternals : [originalExternals]),
+        ...externalsArray,
       ];
 
       // Rule to handle .node files (native modules)
@@ -42,4 +54,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig; // Changed from export default
