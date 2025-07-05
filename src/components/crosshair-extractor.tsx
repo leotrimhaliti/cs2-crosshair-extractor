@@ -16,9 +16,8 @@ interface PlayerCrosshair {
   deaths?: number | null
 }
 
-// Removed the BACKEND_URL constant as it's no longer directly used in fetch due to Netlify proxy.
-// If you need it for local development, you can re-add it and conditionally use it,
-// or configure your local dev server to also proxy requests.
+// IMPORTANT: No need for NEXT_PUBLIC_BACKEND_URL anymore, as the API is local
+// const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"
 
 export function CrosshairExtractor() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -53,18 +52,30 @@ export function CrosshairExtractor() {
     formData.append("demoFile", selectedFile)
 
     try {
-      // Fetch call now uses the relative path that Netlify will proxy
-      const response = await fetch("/api-proxy/extract-crosshair", {
+      console.log("Frontend: Sending request to /api/extract-crosshair") // Frontend Log 1
+      // Fetch directly from the API route within the same Next.js project
+      const response = await fetch("/api/extract-crosshair", {
         method: "POST",
         body: formData,
       })
+      console.log("Frontend: Received response object:", response) // Frontend Log 2
 
       if (!response.ok) {
-        const errorData = await response.json()
+        console.error("Frontend: Response not OK. Status:", response.status) // Frontend Log 3
+        let errorData = { error: "Unknown error" }
+        try {
+          errorData = await response.json() // Try to parse JSON error
+        } catch (jsonError) {
+          console.error("Frontend: Failed to parse error response as JSON.", jsonError) // Frontend Log 4
+          errorData.error = await response.text() // Get raw text if not JSON
+          console.error("Frontend: Raw error response text:", errorData.error) // Frontend Log 5
+        }
         throw new Error(errorData.error || "Failed to extract crosshair codes.")
       }
 
+      console.log("Frontend: Response is OK. Attempting to parse JSON.") // Frontend Log 6
       const data: PlayerCrosshair[] = await response.json()
+      console.log("Frontend: Successfully parsed JSON data:", data) // Frontend Log 7
       setResults(data)
     } catch (err: unknown) {
       let errorMessage = "An unexpected error occurred."
@@ -72,13 +83,14 @@ export function CrosshairExtractor() {
         errorMessage = err.message
       }
       setError(errorMessage)
-      console.error("Extraction error:", err)
+      console.error("Frontend: Extraction error caught:", err) // Frontend Log 8
     } finally {
       setLoading(false)
       if (fileInputRef.current) {
         fileInputRef.current.value = ""
       }
       setSelectedFile(null)
+      console.log("Frontend: Finally block executed.") // Frontend Log 9
     }
   }
 
