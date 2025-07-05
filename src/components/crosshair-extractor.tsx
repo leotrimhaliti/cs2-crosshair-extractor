@@ -62,15 +62,26 @@ export function CrosshairExtractor() {
 
       if (!response.ok) {
         console.error("Frontend: Response not OK. Status:", response.status) // Frontend Log 3
-        let errorData = { error: "Unknown error" }
+        let errorMessage = "Failed to extract crosshair codes."
         try {
-          errorData = await response.json() // Try to parse JSON error
-        } catch (jsonError) {
-          console.error("Frontend: Failed to parse error response as JSON.", jsonError) // Frontend Log 4
-          errorData.error = await response.text() // Get raw text if not JSON
-          console.error("Frontend: Raw error response text:", errorData.error) // Frontend Log 5
+          // Read the response body as text first
+          const errorText = await response.text()
+          console.error("Frontend: Raw error response text:", errorText) // Frontend Log 4
+          try {
+            // Attempt to parse the text as JSON
+            const errorJson = JSON.parse(errorText)
+            errorMessage = errorJson.error || errorMessage
+          } catch (jsonParseError) {
+            // If JSON parsing fails, use the raw text as the error message
+            console.error("Frontend: Failed to parse error response as JSON, using raw text.", jsonParseError) // Frontend Log 5
+            errorMessage = errorText || errorMessage
+          }
+        } catch (readError) {
+          console.error("Frontend: Failed to read response body as text.", readError) // Frontend Log 6
+          // If reading as text also fails, use a generic error
+          errorMessage = "An unknown error occurred and response body could not be read."
         }
-        throw new Error(errorData.error || "Failed to extract crosshair codes.")
+        throw new Error(errorMessage)
       }
 
       console.log("Frontend: Response is OK. Attempting to parse JSON.") // Frontend Log 6
