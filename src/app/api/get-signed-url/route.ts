@@ -1,4 +1,4 @@
-import { getSignedUrl } from "@vercel/blob" // Correct import for getSignedUrl
+import * as blob from "@vercel/blob"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     // Use getSignedUrl to generate a URL for direct client-side upload.
     // This function does not take a 'body' argument for the file content.
-    const { url } = await getSignedUrl(filename, {
+    const { url } = await blob.getSignedUrl(filename, {
       access: "public", // Or 'private' if you configure it
       method: "PUT", // Specify that the signed URL is for a PUT request (for the client's subsequent upload)
     })
